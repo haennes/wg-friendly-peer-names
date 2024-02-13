@@ -172,6 +172,13 @@ if [[ $# -gt 0 ]]; then
     esac
   done
 
+  PEERPK=$1
+  if [[ "$PEERPK" != "" ]]; then
+    PEER=$(grep $PEERPK "$PEERFILE" 2> /dev/null | cut -d ':' -f2)
+    echo "$PEER"
+    exit
+  fi
+
   echo Usage: wgg.sh [-u]
   echo -e "  -u\tAdd missing peers to $PEERFILE"
   echo ""
