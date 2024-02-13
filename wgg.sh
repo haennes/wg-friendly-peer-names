@@ -2,6 +2,9 @@
 PEERFILE=/etc/wireguard/peers
 WGCOMMAND=$(which wg)
 
+TPUT=$(which tput 2>/dev/null)
+[ -z $TPUT ] && TPUT=tputf
+
 # Make sure peer file exists
 if [[ ! -f "$PEERFILE" ]]; then
   touch "$PEERFILE" 2>/dev/null
@@ -12,6 +15,44 @@ if [[ ! -f "$PEERFILE" ]]; then
     exit 0
   fi
 fi
+
+function tputf() {
+
+  case "$1" in
+    "setaf")
+        col=$2
+        case "$col" in
+            ''[0-9])
+                printf "\E[3"$col"m"
+                ;;
+            *)
+                ;;
+        esac
+        ;;
+
+    "setab")
+        col=$2
+        case "$col" in
+            ''[0-9])
+                printf "\E[4"$col"m"
+                ;;
+            *)
+                ;;
+        esac
+        ;;
+
+    "bold")
+        printf '\E[1m'
+        ;;
+
+    "sgr0")
+        printf '\E(B\E[m'
+        ;;
+    *)
+        ;;
+
+  esac
+}
 
 function updatePeerFile() {
   local NEWPEERS=()
@@ -36,9 +77,9 @@ function updatePeerFile() {
 
   for PEERPK in "${NEWPEERS[@]}"; do
     echo -n "Enter friendly name for peer "
-    tput setaf 7; tput bold
+    "$TPUT" setaf 7; "$TPUT" bold
     echo -n $PEERPK
-    tput setaf 9; tput sgr0
+    "$TPUT" setaf 9; "$TPUT" sgr0
     read -r -p " : " PEERNAME
 
     if [[ "$PEERNAME" == "" ]]; then
@@ -56,6 +97,8 @@ function showConfiguration() {
   if [[ ! -t 1 ]]; then
     RICHOUTPUT=0
   fi
+
+  curdate=$(date +%s)
 
   # Run wg through script to preserve color coding
   script --flush --quiet /dev/null --command "$WGCOMMAND" | while read LINE ; do 
@@ -87,8 +130,8 @@ function showConfiguration() {
       # If we found a friendly name, print that
       if [[ "$PEER" != "" ]]; then
         # Pretty print friendly name
-        echoLine "$(printf '%s' "$(tput bold)$(tput setaf 7)  friendly name$(tput setaf 9)$(tput sgr0)")" $RICHOUTPUT 0
-        echoLine "$(printf '%s%s' ": " "$(tput bold)$(tput setab $color)$PEER$(tput sgr0)")" $RICHOUTPUT 1
+        echoLine "$(printf '%s' "$("$TPUT" bold)$("$TPUT" setaf 7)  friendly name$("$TPUT" setaf 9)$("$TPUT" sgr0)")" $RICHOUTPUT 0
+        echoLine "$(printf '%s%s' ": " "$("$TPUT" bold)$("$TPUT" setab $color)$PEER$("$TPUT" sgr0)")" $RICHOUTPUT 1
       fi
     else
       # Non-peer line, just output, but remember indentation
