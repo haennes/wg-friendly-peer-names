@@ -17,6 +17,7 @@ function updatePeerFile() {
   local NEWPEERS=()
 
   # Loop config, extract peers, check peers file, add if not present
+  IFS=$'\r'
   while read LINE ; do
     # Check if its a peer line
     if [[ $LINE == *"peer"* ]]; then
@@ -69,11 +70,25 @@ function showConfiguration() {
       # See if we can find peer in peers file
       PEER=$(grep $PEERPK "$PEERFILE" | cut -d ':' -f2)
 
+      # Get latest handshake and idle time for this peer
+      last_handshake=$("$WGCOMMAND" show all latest-handshakes | grep $PEERPK | cut -f3)
+      idle_seconds=$((${curdate}-${last_handshake}))
+
+      # Choose color
+      if [[ $idle_seconds -lt 150 ]]; then
+        color=2 #green
+      else if [[ $last_handshake -gt 0 ]]; then
+             color=3 #yellow
+           else
+             color=4 #blue
+           fi
+      fi
+
       # If we found a friendly name, print that
       if [[ "$PEER" != "" ]]; then
         # Pretty print friendly name
         echoLine "$(printf '%s' "$(tput bold)$(tput setaf 7)  friendly name$(tput setaf 9)$(tput sgr0)")" $RICHOUTPUT 0
-        echoLine "$(printf '%s' ": $PEER")" $RICHOUTPUT 1
+        echoLine "$(printf '%s%s' ": " "$(tput bold)$(tput setab $color)$PEER$(tput sgr0)")" $RICHOUTPUT 1
       fi
     else
       # Non-peer line, just output, but remember indentation
