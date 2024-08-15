@@ -101,7 +101,7 @@ function showConfiguration() {
   curdate=$(date +%s)
 
   # Run wg through script to preserve color coding
-  script --flush --quiet /dev/null --command "$WGCOMMAND" | while read LINE ; do 
+  script --flush --quiet /dev/null --command "$WGCOMMAND show $DEVLIST" | while read LINE ; do 
     # Check if its a peer line
     if [[ $LINE == *"peer"* ]]; then
       # Isolate peer public key, cut peer: (incl colors) hardcoded, then cut until first ESC character
@@ -163,27 +163,31 @@ function echoLine() {
 }
 
 # What are we doing?
-if [[ $# -gt 0 ]]; then
-  while getopts :u OPTION; do
-    case ${OPTION} in
-      u)  updatePeerFile
-          exit
-          ;;
-    esac
-  done
+while getopts ":up:" OPTION; do
+  case ${OPTION} in
+    u)  updatePeerFile
+        exit
+        ;;
+    p)  PEERPK=${OPTARG}
+        PEER=$(grep $PEERPK "$PEERFILE" 2> /dev/null | cut -d ':' -f2)
+        [[ "$PEER" != "" ]] && echo "$PEER"
+        exit
+        ;;
+    :)  >&2 echo "Option -${OPTARG} requires an argument."
+        exit
+        ;;
+  esac
+done
 
-  PEERPK=$1
-  if [[ "$PEERPK" != "" ]]; then
-    PEER=$(grep $PEERPK "$PEERFILE" 2> /dev/null | cut -d ':' -f2)
-    echo "$PEER"
-    exit
-  fi
+shift "$(( OPTIND - 1 ))"
 
-  echo Usage: wgg.sh [-u]
-  echo -e "  -u\tAdd missing peers to $PEERFILE"
-  echo ""
-  echo If no arguments are given, shows wg configuration with friendly peernames added
+if [[ "$1" != "" ]]; then
+	DEVLIST=$1
 else
-  # Show the peer-enriched configuration overview
-  showConfiguration
+	DEVLIST=all
 fi
+
+# Show the peer-enriched configuration overview
+showConfiguration
+
+exit
