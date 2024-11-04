@@ -1,4 +1,3 @@
-#!/bin/bash
 PEERFILE=/etc/wireguard/peers
 WGCOMMAND=$(which wg)
 
@@ -101,7 +100,7 @@ function showConfiguration() {
   curdate=$(date +%s)
 
   # Run wg through script to preserve color coding
-  script --flush --quiet /dev/null --command "$WGCOMMAND show $DEVLIST" | while read LINE ; do 
+  script --flush --quiet /dev/null --command "$WGCOMMAND show $DEVLIST" | while read LINE ; do
     # Check if its a peer line
     if [[ $LINE == *"peer"* ]]; then
       # Isolate peer public key, cut peer: (incl colors) hardcoded, then cut until first ESC character
