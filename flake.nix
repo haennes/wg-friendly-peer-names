@@ -30,6 +30,7 @@
             environment.etc."wireguard/peers".text = (concatStringsSep "\n"
               (map (peer: "${peer.publicKey}:${peer.name}")
                 config.networking.wireguard.interfaces.wg0.peers));
+            environment.systemPackages = [ self.packages.x86_64-linux.default ];
           };
         };
 
