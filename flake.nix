@@ -19,5 +19,20 @@
 
       packages.x86_64-linux.default = self.packages.x86_64-linux.wgg;
 
+      nixosModules.default = { config, lib, ... }:
+        let
+          inherit (lib) concatStringsSep mkEnableOption;
+          cfg = config.wg-friendly-peer-names;
+        in {
+          options.wg-friendly-peer-names.enable =
+            mkEnableOption "wg-friendly-peer-names";
+          config = lib.mkIf cfg.enable {
+            environment.etc."wireguard/peers".text = (concatStringsSep "\n"
+              (map (peer: "${peer.publicKey}:${peer.name}")
+                config.networking.wireguard.interfaces.wg0.peers));
+          };
+        };
+
+      nixosModules.wgg = self.nixosModules.default;
     };
 }
