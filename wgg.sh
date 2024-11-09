@@ -107,7 +107,9 @@ function showConfiguration() {
       PEERPK=$(printf '%s' "$LINE" | cut -c25- | cut -d $(echo -e '\033') -f1)
 
       # Output peer line
-      echoLine "$LINE" $RICHOUTPUT 1
+      if [[ $ONLY_NAMES -eq 0 ]]; then
+        echoLine "$LINE" $RICHOUTPUT 1
+      fi
 
       # See if we can find peer in peers file
       PEER=$(grep $PEERPK "$PEERFILE" | cut -d ':' -f2)
@@ -134,10 +136,13 @@ function showConfiguration() {
       fi
     else
       # Non-peer line, just output, but remember indentation
-      if [[ "$LINE" == *"interface"* ]]; then
-        echoLine "$LINE" $RICHOUTPUT 1
-      else
-        echoLine "  $LINE" $RICHOUTPUT 1
+      if [[ $ONLY_NAMES -eq 0 ]]; then
+
+        if [[ "$LINE" == *"interface"* ]]; then
+          echoLine "$LINE" $RICHOUTPUT 1
+        else
+          echoLine "  $LINE" $RICHOUTPUT 1
+        fi
       fi
     fi
   done
@@ -161,9 +166,12 @@ function echoLine() {
   fi
 }
 
+ONLY_NAMES=0
 # What are we doing?
-while getopts ":up:" OPTION; do
+while getopts ":up:n" OPTION; do
   case ${OPTION} in
+    n)  ONLY_NAMES=1
+        ;;
     u)  updatePeerFile
         exit
         ;;
