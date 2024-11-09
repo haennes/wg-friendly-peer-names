@@ -1,7 +1,7 @@
 {
   description = ''
     Provides a way to give wireguard peers a friendlier and more readable name
-    Resources'';
+  '';
 
   inputs = { nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable"; };
 
