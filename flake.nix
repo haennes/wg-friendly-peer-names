@@ -23,7 +23,7 @@
           checkPhase = ":"; # too many failed checks
           bashOptions = [ ]; # unbound variable $1
           runtimeInputs = with pkgs; [ wireguard-tools ];
-          text = ''${wgg}/bin/wgg -n "$@"'';
+          text = ''${wgg}/bin/wgg -n'';
         };
 
         default = self.packages.x86_64-linux.wgg;
@@ -36,7 +36,10 @@
         in {
           options.wg-friendly-peer-names = {
             enable = mkEnableOption "wg-friendly-peer-names";
-            wggn.enable = mkEnableOption "alias for wgg -n";
+            wggn = {
+              enable = mkEnableOption "alias for wgg -n";
+              enableSUID = mkEnableOption "wether to enable registering this binary as suid sou you can run it wihout sudo";
+            };
           };
           config = lib.mkIf (cfg.enable || cfg.wggn.enable) {
             environment.etc."wireguard/peers".text = concatLines 
@@ -46,6 +49,14 @@
               [ self.packages.x86_64-linux.default ])
               ++ (lib.optionals (cfg.wggn.enable))
               [ self.packages.x86_64-linux.wggn ];
+            security.wrappers = lib.mkIf cfg.wggn.enableSUID {
+              "wggn" = {
+                setgid = true;
+                owner = "root";
+                group = "root";
+                source = lib.getExe self.packages.x86_64-linux.wggn;
+              };
+            };
           };
         };
 
