@@ -31,7 +31,7 @@
 
       nixosModules.default = { config, lib, ... }:
         let
-          inherit (lib) concatStringsSep mkEnableOption;
+          inherit (lib) concatLines mkEnableOption mapAttrsToList flatten;
           cfg = config.wg-friendly-peer-names;
         in {
           options.wg-friendly-peer-names = {
@@ -39,9 +39,9 @@
             wggn.enable = mkEnableOption "alias for wgg -n";
           };
           config = lib.mkIf (cfg.enable || cfg.wggn.enable) {
-            environment.etc."wireguard/peers".text = (concatStringsSep "\n"
+            environment.etc."wireguard/peers".text = concatLines 
               (map (peer: "${peer.publicKey}:${peer.name}")
-                config.networking.wireguard.interfaces.wg0.peers));
+                 (flatten (mapAttrsToList (_: v: v.peers) config.networking.wireguard.interfaces)));
             environment.systemPackages = (lib.optionals (cfg.enable)
               [ self.packages.x86_64-linux.default ])
               ++ (lib.optionals (cfg.wggn.enable))
