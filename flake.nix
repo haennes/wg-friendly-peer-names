@@ -7,24 +7,32 @@
 
   outputs = { self, nixpkgs }:
     let pkgs = nixpkgs.legacyPackages.x86_64-linux;
-    in {
-
-      packages.x86_64-linux = rec {
-        wgg = pkgs.writeShellApplication {
-          name = "wgg";
+        wgg = pkgs.stdenv.mkDerivation {
+          name="wireguard-friendly-peer-names";
+          pname = "wgg";
           checkPhase = ":"; # too many failed checks
-          bashOptions = [ ]; # unbound variable $1
-          runtimeInputs = with pkgs; [ wireguard-tools ];
-          text = builtins.readFile ./wgg.sh;
+          src = ./.;
+
+          nativeBuildInputs = with pkgs; [ makeWrapper ];
+          installPhase = ''
+              mkdir -p $out/bin
+              cp wgg.sh $out/bin/wgg
+              wrapProgram $out/bin/wgg --prefix PATH : ${pkgs.wireguard-tools}/bin
+            '';
         };
-        wggn = pkgs.writeShellApplication {
+        wggnf = preCmd: pkgs.writeShellApplication {
 
           name = "wggn";
           checkPhase = ":"; # too many failed checks
           bashOptions = [ ]; # unbound variable $1
           runtimeInputs = with pkgs; [ wireguard-tools ];
-          text = ''${wgg}/bin/wgg -n'';
+          text = ''${preCmd} ${wgg}/bin/wgg -n'';
         };
+        wggn = wggnf "";
+    in {
+
+      packages.x86_64-linux = {
+        inherit wgg wggn;
 
         default = self.packages.x86_64-linux.wgg;
       };
@@ -52,9 +60,11 @@
             security.wrappers = lib.mkIf cfg.wggn.enableSUID {
               "wggn" = {
                 setgid = true;
+                setuid = true;
                 owner = "root";
                 group = "root";
-                source = lib.getExe self.packages.x86_64-linux.wggn;
+                source = "${wggn}/bin/wggn";
+                # source = "${wggnf "sudo"}/bin/wggn";
               };
             };
           };
