@@ -1,0 +1,25 @@
+cargo-features = ["edition2024"]
+[package]
+name = "wg-friendly-peer-names"
+version = "0.1.0"
+edition = "2021"
+
+[toolchain]
+channel = "nightly"
+
+[[bin]]
+name="wgg"
+path="src/main.rs"
+
+[workspace.package]
+version = "0.0.1"
+
+[dependencies]
+clap = {version = "4.5.53", features = ["derive", "string"]}
+clap_complete = {version ="4.5.61", features = ["unstable-dynamic"]}
+either = "1.15.0"
+itertools = "0.14.0"
+rust_helpers = "2.12.0"
+thiserror = "2.0.17"
+wireguard-control = "1.7.1"
+yansi = { version = "1.0.1", features = [ "detect-tty", "detect-env"]}
