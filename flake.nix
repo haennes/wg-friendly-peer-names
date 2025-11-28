@@ -55,14 +55,13 @@
             enable = mkEnableOption "wg-friendly-peer-names";
             enableSUID = mkEnableOption "wether to enable registering this binary as suid sou you can run it wihout sudo";
           };
-          config = lib.mkIf (cfg.enable || cfg.enableSUID) {
+          config = lib.mkIf cfg.enable {
             environment.etc."wireguard/peers".text = concatLines (
               map (peer: "${peer.publicKey}:${peer.name}") (
                 flatten (mapAttrsToList (_: v: v.peers) config.networking.wireguard.interfaces)
               )
             );
-            environment.systemPackages =
-              (lib.optionals (cfg.enable) [ self.packages.x86_64-linux.default ]);
+            environment.systemPackages = [ self.packages.x86_64-linux.default ];
             security.wrappers = lib.mkIf cfg.enableSUID {
               "wgg" = {
                 setgid = true;
