@@ -9,7 +9,8 @@ use std::{
     time::SystemTime,
 };
 
-use clap_complete::{CompletionCandidate, generate};
+use clap_complete::{generate, CompletionCandidate};
+use debug_print::debug_println;
 use itertools::Itertools;
 use wireguard_control::{Backend, Device, InterfaceName, PeerConfig, PeerStats};
 use yansi::{Condition, Paint};
@@ -46,10 +47,8 @@ fn main() -> Result<(), WgFriendlyPeerNameError> {
     }
     let ifs = match ifname {
         None => Device::list(Backend::Kernel).map_err(WgFriendlyPeerNameError::ListingError)?,
-        Some(name) => vec![
-            InterfaceName::from_str(&name)
-                .map_err(WgFriendlyPeerNameError::InvalidInterfaceError)?,
-        ],
+        Some(name) => vec![InterfaceName::from_str(&name)
+            .map_err(WgFriendlyPeerNameError::InvalidInterfaceError)?],
     };
     let ifs = ifs.iter();
     let if_names = load_if_names(peerfile_path)?;
@@ -88,7 +87,7 @@ fn load_if_names(
                 ))?;
         if_names.insert(key.to_string(), name.to_string());
     }
-    dbg!(&if_names);
+    debug_println!("{:?}", if_names);
     Ok(if_names)
 }
 

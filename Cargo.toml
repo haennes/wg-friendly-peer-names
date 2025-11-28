@@ -17,6 +17,7 @@ version = "0.0.1"
 [dependencies]
 clap = {version = "4.5.53", features = ["derive", "string"]}
 clap_complete = {version ="4.5.61", features = ["unstable-dynamic"]}
+debug_print = "1.0.0"
 either = "1.15.0"
 itertools = "0.14.0"
 rust_helpers = "2.12.0"
