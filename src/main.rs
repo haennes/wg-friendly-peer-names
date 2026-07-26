@@ -12,6 +12,7 @@ use std::{
 use clap_complete::{generate, CompletionCandidate};
 use debug_print::debug_println;
 use itertools::Itertools;
+use serde::Serialize;
 use wireguard_control::{Backend, Device, InterfaceName, PeerConfig, PeerStats};
 use yansi::{Condition, Paint};
 
@@ -20,7 +21,8 @@ use clap::{CommandFactory, Parser};
 use crate::{
     format::format_last_handshake_symbol,
     models::{
-        Args, AugmentedDevice, AugmentedPeerInfo, PeerFileFormatError, WgFriendlyPeerNameError,
+        Args, AugmentedDevice, AugmentedPeerInfo, OutputFormat, PeerFileFormatError,
+        WgFriendlyPeerNameError,
     },
 };
 
@@ -35,6 +37,7 @@ fn main() -> Result<(), WgFriendlyPeerNameError> {
         ifname,
         force_color,
         show_completions,
+        output_format,
     } = Args::parse();
 
     if let Some(shell) = show_completions {
@@ -66,10 +69,43 @@ fn main() -> Result<(), WgFriendlyPeerNameError> {
             .collect(),
         None => augemented.iter_mut().collect(),
     };
-    if names_only {
-        output_names(devs)
-    } else {
-        output_all(devs)
+    match output_format {
+        OutputFormat::Text => {
+            if names_only {
+                output_names(devs)
+            } else {
+                output_all(devs)
+            }
+        }
+        OutputFormat::Json => {
+            if names_only {
+                #[derive(Serialize)]
+                struct OuterOutputJson {
+                    if_name: String,
+                    peers: Vec<String>,
+                }
+                let l = devs
+                    .iter()
+                    .map(|d| OuterOutputJson {
+                        if_name: d.name.to_string(),
+                        peers: d
+                            .peers
+                            .iter()
+                            .map(|p| p.name.clone().unwrap_or(p.config.public_key.to_base64()))
+                            .collect_vec(),
+                    })
+                    .collect_vec();
+                println!(
+                    "{}",
+                    serde_json::to_string(&l).unwrap_or_else(|e| e.to_string())
+                );
+                Ok(())
+            } else {
+                let fmt = serde_json::to_string(&devs).unwrap_or_else(|e| e.to_string());
+                println!("{}", fmt);
+                Ok(())
+            }
+        }
     }
 }
 
