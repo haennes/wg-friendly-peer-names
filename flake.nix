@@ -68,7 +68,7 @@
                 setuid = true;
                 owner = "root";
                 group = "root";
-                source = "${wgg}/bin/wgg";
+                source = lib.getExe wgg;
               };
             };
           };
