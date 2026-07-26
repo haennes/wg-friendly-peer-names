@@ -57,6 +57,7 @@ pub(crate) struct Args {
         long = "peername",
         short = 'p',
         help = "Show only information about this peer",
+        value_name = "PEER",
         add = ArgValueCompleter::new(complete_peer_name)
     )]
     pub(crate) peername: Option<String>,
@@ -65,6 +66,7 @@ pub(crate) struct Args {
         long = "ifname",
         short = 'i',
         help = "Show only information abut this interface",
+        value_name = "IF",
         add = ArgValueCompleter::new(complete_if_name)
     )]
     pub(crate) ifname: Option<String>,
