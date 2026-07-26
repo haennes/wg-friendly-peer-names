@@ -123,7 +123,6 @@ fn load_if_names(
                 ))?;
         if_names.insert(key.to_string(), name.to_string());
     }
-    debug_println!("{:?}", if_names);
     Ok(if_names)
 }
 
